@@ -273,6 +273,10 @@
     <div class="divider"></div>
   </div>
   <div class="book-list animate-up" id="book-list"></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px;">
+      <button onclick="exportProgress()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:7px 18px;font-family:'Alegreya Sans',sans-serif;font-size:0.8rem;color:var(--faded);cursor:pointer;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--faded)'">↓ Export Progress</button>
+      <button onclick="importProgress()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:7px 18px;font-family:'Alegreya Sans',sans-serif;font-size:0.8rem;color:var(--faded);cursor:pointer;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--faded)'">↑ Import Backup</button>
+    </div>
   <footer>Μαθητής · GNT Vocabulary</footer>
 </div>
 
@@ -562,6 +566,44 @@ VOCAB_DATA.books.forEach((book, i) => {
   el.onclick = () => showChapters(i);
   bookList.appendChild(el);
 });
+
+
+// ── Export / Import ──
+function exportProgress() {
+  const key = localStorage.getItem(STORAGE_KEY) ? STORAGE_KEY : null;
+  const data = key ? localStorage.getItem(key) : null;
+  if (!data) { alert('No progress to export yet.'); return; }
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = STORAGE_KEY + '_backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importProgress() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        alert('Progress restored! Reloading...');
+        location.reload();
+      } catch(err) {
+        alert('Invalid backup file.');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
 
 // ── Init ──
 loadState();
